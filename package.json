@@ -1,22 +1,21 @@
 {
-    "name": "fyyur-app",
-    "version": "1.0.0",
-    "description": "Fyyur is a musical venue and artist booking site that facilitates the discovery and bookings of shows between local performing artists and venues.",
-    "main": "app.py",
-    "scripts": {
-        "start": "python app.py",
-        "test": "echo 'No test command specified'"
-    },
-    "keywords": [
-        "Fyyur",
-        "Project",
-        "FSND",
-        "Nano-degree"
-    ],
-    "author": "Mia McDuffie",
-    "license": "ISC - Udacity",
-    "dependencies": {
-        "bootstrap": "^3.4.1"
-    },
-    "devDependencies": {}
+  "name": "fyyur-app",
+  "version": "1.0.0",
+  "description": "Fyyur is a musical venue and artist booking site that facilitates the discovery and bookings of shows between local performing artists and venues.",
+  "main": "app.py",
+  "scripts": {
+    "start": "python app.py",
+    "test": "echo 'No test command specified'"
+  },
+  "keywords": [
+    "Fyyur",
+    "Project",
+    "FSND",
+    "Nano-degree"
+  ],
+  "author": "Mia McDuffie",
+  "license": "ISC - Udacity",
+  "dependencies": {
+    "bootstrap": "^3.4.1"
+  }
 }
