@@ -42,6 +42,17 @@ class Venue(db.Model):
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
 
+    genres = db.Column(db.ARRAY(db.String()), nullable=False)
+    website = db.Column(db.String(500), nullable=True)
+    seeking_talent = db.Column(db.Boolean, default=False, nullable=False)
+    seeking_description = db.Column(db.String(500), nullable=True)
+
+    artists_show = db.relationship(
+        "Show", back_populates="venue", cascade='all, delete')
+
+    def __repr__(self):
+        return f"\n<Venue id: {self.id} name: {self.name}>"
+
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 
@@ -56,6 +67,31 @@ class Artist(db.Model):
     genres = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+
+    website = db.Column(db.String(500), nullable=True)
+    seeking_venue = db.Column(db.Boolean, default=False, nullable=False)
+    seeking_description = db.Column(db.String(300), nullable=True)
+
+    venues_show = db.relationship(
+        "Show", back_populates="artist", cascade='all, delete')
+
+    def __repr__(self):
+        return f"\n<Artist id: {self.id} name: {self.name}>"
+
+
+class Show(db.Model):
+    # Table name
+    __tablename__ = 'shows'
+    id = db.Column(db.Integer, primary_key=True)
+    artist_id = db.Column(db.Integer, db.ForeignKey(
+        'Artist.id', ondelete='CASCADE'), nullable=False)
+    venue_id = db.Column(db.Integer, db.ForeignKey(
+        'Venue.id', ondelete='CASCADE'), nullable=False)
+    start_time = db.Column(db.DateTime(), nullable=False)
+    venue = db.relationship('Venue', back_populates='artists_show',
+                            lazy=True, cascade='all, delete', passive_deletes=True)
+    artist = db.relationship('Artist', back_populates='venues_show',
+                             lazy=True, cascade='all, delete', passive_deletes=True)
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
