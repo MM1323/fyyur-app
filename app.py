@@ -143,6 +143,7 @@ class Show(db.Model):
         return f'<Show id: {self.id}, artist_id: {self.artist_id}, venue_id: {self.venue_id} start_time: {self.start_time}>'
 
 
+# TODO: implement any missing fields, as a database migration using Flask-Migrate
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
 # ----------------------------------------------------------------------------#
@@ -177,7 +178,38 @@ def index():
 @app.route('/venues')
 def venues():
     # TODO: replace with real venues data.
-    #       num_upcoming_shows should be aggregated based on number of upcoming shows per venue.
+    # try:
+    #     locations = Venue.query.distinct(Venue.city, Venue.state).all()
+    #     print(locations)
+    #     data = []
+    #     for venue in locations:
+    #         object = {}
+    #         object['city'] = venue.city
+    #         object['state'] = venue.state
+
+    #         venues = []
+
+    #         venue_data = Venue.query.filter(
+    #             Venue.state == venue.state, Venue.city == venue.city).all()
+
+    #         current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+    #         for this_venue in venue_data:
+    #             current_venue = {}
+    #             current_venue['id'] = this_venue.id
+    #             current_venue['name'] = this_venue.name
+    #             current_venue['num_upcoming_shows'] = Show.query.filter(
+    #                 db.and_(Show.start_time > current_time, Show.venue_id == this_venue.id)).count()
+    #             venues.append(current_venue)
+    #         object['venues'] = venues
+    #         data.append(object)
+    # except:
+    #     flash(
+    #         f"Sorry due, to an issue on our end, we are unable to display the venues page.", category="error")
+    #     abort(500)
+    # finally:
+    #     return render_template('pages/venues.html', areas=data)
+
+    ###########################
     data = [{
         "city": "San Francisco",
         "state": "CA",
