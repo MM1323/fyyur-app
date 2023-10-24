@@ -5,7 +5,7 @@
 import json
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for
+from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -31,7 +31,7 @@ migrate = Migrate(app, db)
 
 
 class Venue(db.Model):
-    __tablename__ = 'Venue'
+    __tablename__ = 'venues'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -47,17 +47,39 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean, default=False, nullable=False)
     seeking_description = db.Column(db.String(500), nullable=True)
 
-    artists_show = db.relationship(
-        "Show", back_populates="venue", cascade='all, delete')
+    show = db.relationship(
+        "Show", back_populates="venue_shows", cascade='all, delete', lazy='dynamic')
 
     def __repr__(self):
         return f"\n<Venue id: {self.id} name: {self.name}>"
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    def json(self):
+        upcoming_shows = self.show.filter(
+            Show.start_time > datetime.now()).all()
+        past_shows = self.show.filter(Show.start_time < datetime.now()).all()
+
+        return {
+            'id': self.id,
+            'name': self.name,
+            'city': self.city,
+            'state': self.state,
+            'address': self.address,
+            'phone': self.phone,
+            'genres':  json.loads(self.genres),
+            'image_link': self.image_link,
+            'facebook_link': self.facebook_link,
+            'website': self.website,
+            'seeking_talent': self.seeking_talent,
+            'seeking_description': self.seeking_description,
+            'upcoming_shows_count': len(upcoming_shows),
+            'upcoming_shows': upcoming_shows,
+            'past_shows_count': len(past_shows),
+            'past_shows': past_shows,
+        }
 
 
 class Artist(db.Model):
-    __tablename__ = 'Artist'
+    __tablename__ = 'artists'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -72,11 +94,34 @@ class Artist(db.Model):
     seeking_venue = db.Column(db.Boolean, default=False, nullable=False)
     seeking_description = db.Column(db.String(300), nullable=True)
 
-    venues_show = db.relationship(
-        "Show", back_populates="artist", cascade='all, delete')
+    show = db.relationship(
+        "Show", back_populates="artist_shows", cascade='all, delete', lazy='dynamic')
 
     def __repr__(self):
         return f"\n<Artist id: {self.id} name: {self.name}>"
+
+    def json(self):
+        upcoming_shows = self.show.filter(
+            Show.start_time > datetime.now()).all()
+        past_shows = self.show.filter(Show.start_time < datetime.now()).all()
+
+        return {
+            'id': self.id,
+            'name': self.name,
+            'city': self.city,
+            'state': self.state,
+            'phone': self.phone,
+            'genres': json.loads(self.genres),
+            'image_link': self.image_link,
+            'facebook_link': self.facebook_link,
+            'website': self.website,
+            'seeking_venue': self.seeking_venue,
+            'seeking_description': self.seeking_description,
+            'upcoming_shows_count': len(upcoming_shows),
+            'upcoming_shows': upcoming_shows,
+            'past_shows_count': len(past_shows),
+            'past_shows': past_shows,
+        }
 
 
 class Show(db.Model):
@@ -84,16 +129,19 @@ class Show(db.Model):
     __tablename__ = 'shows'
     id = db.Column(db.Integer, primary_key=True)
     artist_id = db.Column(db.Integer, db.ForeignKey(
-        'Artist.id', ondelete='CASCADE'), nullable=False)
+        'artists.id', ondelete='CASCADE'), nullable=False)
     venue_id = db.Column(db.Integer, db.ForeignKey(
-        'Venue.id', ondelete='CASCADE'), nullable=False)
+        'venues.id', ondelete='CASCADE'), nullable=False)
     start_time = db.Column(db.DateTime(), nullable=False)
-    venue = db.relationship('Venue', back_populates='artists_show',
-                            lazy=True, cascade='all, delete', passive_deletes=True)
-    artist = db.relationship('Artist', back_populates='venues_show',
-                             lazy=True, cascade='all, delete', passive_deletes=True)
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    artist = db.relationship('Artist', back_populates='show_artists',
+                            lazy=True, cascade='all, delete', passive_deletes=True)
+    venue = db.relationship('Venue', back_populates='show_venues',
+                            lazy=True, cascade='all, delete', passive_deletes=True)
+
+    def __repr__(self):
+        return f'<Show id: {self.id}, artist_id: {self.artist_id}, venue_id: {self.venue_id} start_time: {self.start_time}>'
+
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
