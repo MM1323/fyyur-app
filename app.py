@@ -5,7 +5,7 @@
 import json
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort
+from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort, jsonify
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -34,28 +34,24 @@ class Venue(db.Model):
     __tablename__ = 'venues'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    address = db.Column(db.String(120))
+    name = db.Column(db.String, nullable=False)
+    city = db.Column(db.String(120), nullable=False)
+    state = db.Column(db.String(120), nullable=False)
+    address = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(120))
+    genres = db.Column(db.String(120), nullable=False)
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
-
-    genres = db.Column(db.ARRAY(db.String()), nullable=False)
-    website = db.Column(db.String(500), nullable=True)
-    seeking_talent = db.Column(db.Boolean, default=False, nullable=False)
-    seeking_description = db.Column(db.String(500), nullable=True)
-
-    show = db.relationship(
-        "Show", back_populates="venue_shows", cascade='all, delete', lazy='dynamic')
+    website = db.Column(db.String(120))
+    seeking_talent = db.Column(db.Boolean, nullable=False, default=False)
+    seeking_description = db.Column(db.String(500))
+    show = db.relationship("Show", backref="venue_shows", cascade="all, delete", lazy='dynamic')
 
     def __repr__(self):
-        return f"\n<Venue id: {self.id} name: {self.name}>"
+        return f'<Venue id: {self.id}, name: {self.name}>'
 
     def json(self):
-        upcoming_shows = self.show.filter(
-            Show.start_time > datetime.now()).all()
+        upcoming_shows = self.show.filter(Show.start_time > datetime.now()).all()
         past_shows = self.show.filter(Show.start_time < datetime.now()).all()
 
         return {
@@ -82,62 +78,55 @@ class Artist(db.Model):
     __tablename__ = 'artists'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
+    name = db.Column(db.String, nullable=False)
+    city = db.Column(db.String(120), nullable=False)
+    state = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
+    genres = db.Column(db.String(120), nullable=False)
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
-
-    website = db.Column(db.String(500), nullable=True)
-    seeking_venue = db.Column(db.Boolean, default=False, nullable=False)
-    seeking_description = db.Column(db.String(300), nullable=True)
-
-    show = db.relationship(
-        "Show", back_populates="artist_shows", cascade='all, delete', lazy='dynamic')
+    website = db.Column(db.String(120))
+    seeking_venue = db.Column(db.Boolean, nullable=False, default=False)
+    seeking_description = db.Column(db.String(500))
+    show = db.relationship("Show", backref="artist_shows", cascade="all, delete", lazy='dynamic')
 
     def __repr__(self):
-        return f"\n<Artist id: {self.id} name: {self.name}>"
+        return f'<Artist id: {self.id}, name: {self.name}>'
 
     def json(self):
-        upcoming_shows = self.show.filter(
-            Show.start_time > datetime.now()).all()
+        upcoming_shows = self.show.filter(Show.start_time > datetime.now()).all()
         past_shows = self.show.filter(Show.start_time < datetime.now()).all()
 
         return {
-            'id': self.id,
-            'name': self.name,
-            'city': self.city,
-            'state': self.state,
-            'phone': self.phone,
-            'genres': json.loads(self.genres),
-            'image_link': self.image_link,
-            'facebook_link': self.facebook_link,
-            'website': self.website,
-            'seeking_venue': self.seeking_venue,
-            'seeking_description': self.seeking_description,
-            'upcoming_shows_count': len(upcoming_shows),
-            'upcoming_shows': upcoming_shows,
-            'past_shows_count': len(past_shows),
-            'past_shows': past_shows,
+        'id': self.id,
+        'name': self.name,
+        'city': self.city,
+        'state': self.state,
+        'phone': self.phone,
+        'genres': json.loads(self.genres),
+        'image_link': self.image_link,
+        'facebook_link': self.facebook_link,
+        'website': self.website,
+        'seeking_venue': self.seeking_venue,
+        'seeking_description': self.seeking_description,
+        'upcoming_shows_count': len(upcoming_shows),
+        'upcoming_shows': upcoming_shows,
+        'past_shows_count': len(past_shows),
+        'past_shows': past_shows,
         }
 
 
 class Show(db.Model):
     # Table name
     __tablename__ = 'shows'
-    id = db.Column(db.Integer, primary_key=True)
-    artist_id = db.Column(db.Integer, db.ForeignKey(
-        'artists.id', ondelete='CASCADE'), nullable=False)
-    venue_id = db.Column(db.Integer, db.ForeignKey(
-        'venues.id', ondelete='CASCADE'), nullable=False)
-    start_time = db.Column(db.DateTime(), nullable=False)
 
-    artist = db.relationship('Artist', back_populates='show_artists',
-                            lazy=True, cascade='all, delete', passive_deletes=True)
-    venue = db.relationship('Venue', back_populates='show_venues',
-                            lazy=True, cascade='all, delete', passive_deletes=True)
+    id = db.Column(db.Integer, primary_key=True)
+    artist_id = db.Column(db.Integer, db.ForeignKey('artists.id', ondelete="CASCADE"), nullable=False)
+    venue_id = db.Column(db.Integer, db.ForeignKey('venues.id', ondelete="CASCADE"), nullable=False)
+    start_time = db.Column(db.DateTime, nullable=False)
+    artist = db.relationship("Artist", backref="show_artists", lazy=True)
+    venue = db.relationship("Venue", backref="show_venues", lazy=True)
+                            
 
     def __repr__(self):
         return f'<Show id: {self.id}, artist_id: {self.artist_id}, venue_id: {self.venue_id} start_time: {self.start_time}>'
@@ -178,60 +167,60 @@ def index():
 @app.route('/venues')
 def venues():
     # TODO: replace with real venues data.
-    # try:
-    #     locations = Venue.query.distinct(Venue.city, Venue.state).all()
-    #     print(locations)
-    #     data = []
-    #     for venue in locations:
-    #         object = {}
-    #         object['city'] = venue.city
-    #         object['state'] = venue.state
+    try:
+        locations = Venue.query.distinct(Venue.city, Venue.state).all()
+        print(locations)
+        data = []
+        for venue in locations:
+            object = {}
+            object['city'] = venue.city
+            object['state'] = venue.state
 
-    #         venues = []
+            venues = []
 
-    #         venue_data = Venue.query.filter(
-    #             Venue.state == venue.state, Venue.city == venue.city).all()
+            venue_data = Venue.query.filter(
+                Venue.state == venue.state, Venue.city == venue.city).all()
 
-    #         current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
-    #         for this_venue in venue_data:
-    #             current_venue = {}
-    #             current_venue['id'] = this_venue.id
-    #             current_venue['name'] = this_venue.name
-    #             current_venue['num_upcoming_shows'] = Show.query.filter(
-    #                 db.and_(Show.start_time > current_time, Show.venue_id == this_venue.id)).count()
-    #             venues.append(current_venue)
-    #         object['venues'] = venues
-    #         data.append(object)
-    # except:
-    #     flash(
-    #         f"Sorry due, to an issue on our end, we are unable to display the venues page.", category="error")
-    #     abort(500)
-    # finally:
-    #     return render_template('pages/venues.html', areas=data)
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+            for this_venue in venue_data:
+                current_venue = {}
+                current_venue['id'] = this_venue.id
+                current_venue['name'] = this_venue.name
+                current_venue['num_upcoming_shows'] = Show.query.filter(
+                    db.and_(Show.start_time > current_time, Show.venue_id == this_venue.id)).count()
+                venues.append(current_venue)
+            object['venues'] = venues
+            data.append(object)
+    except:
+        flash(
+            f"Sorry due, to an issue on our end, we are unable to display the venues page.", category="error")
+        abort(500)
+    finally:
+        return render_template('pages/venues.html', areas=data)
 
     ###########################
-    data = [{
-        "city": "San Francisco",
-        "state": "CA",
-        "venues": [{
-            "id": 1,
-            "name": "The Musical Hop",
-            "num_upcoming_shows": 0,
-        }, {
-            "id": 3,
-            "name": "Park Square Live Music & Coffee",
-            "num_upcoming_shows": 1,
-        }]
-    }, {
-        "city": "New York",
-        "state": "NY",
-        "venues": [{
-            "id": 2,
-            "name": "The Dueling Pianos Bar",
-            "num_upcoming_shows": 0,
-        }]
-    }]
-    return render_template('pages/venues.html', areas=data)
+    # data = [{
+    #     "city": "San Francisco",
+    #     "state": "CA",
+    #     "venues": [{
+    #         "id": 1,
+    #         "name": "The Musical Hop",
+    #         "num_upcoming_shows": 0,
+    #     }, {
+    #         "id": 3,
+    #         "name": "Park Square Live Music & Coffee",
+    #         "num_upcoming_shows": 1,
+    #     }]
+    # }, {
+    #     "city": "New York",
+    #     "state": "NY",
+    #     "venues": [{
+    #         "id": 2,
+    #         "name": "The Dueling Pianos Bar",
+    #         "num_upcoming_shows": 0,
+    #     }]
+    # }]
+    # return render_template('pages/venues.html', areas=data)
 
 
 @app.route('/venues/search', methods=['POST'])
